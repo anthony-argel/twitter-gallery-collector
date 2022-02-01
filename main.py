@@ -68,6 +68,7 @@ class hashtag_collector:
             
         with open(f'{filename}-meta.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
+            writer.writerow(['newest_id', 'oldest_id'])
             writer.writerow([str(self.meta['newest_id']), str(self.meta['oldest_id'])])
 
 
