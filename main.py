@@ -59,12 +59,12 @@ class hashtag_collector:
 
         with open(f'{filename}-media.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
-            writer.writerow(['media_key', 'url', 'type'])
+            writer.writerow(['media_key', 'url', 'type', 'hashtag'])
             for content in self.media:
                 if('preview_image_url' in content):
-                    writer.writerow([str(content['media_key']), content['preview_image_url'], content['type']])
+                    writer.writerow([str(content['media_key']), content['preview_image_url'], content['type'], filename])
                 else:
-                    writer.writerow([str(content['media_key']), content['url'], content['type']])
+                    writer.writerow([str(content['media_key']), content['url'], content['type'], filename])
             
         with open(f'{filename}-meta.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
@@ -99,7 +99,7 @@ class hashtag_collector:
             data = self.get_data(current_url)
             self.parse_data(data)
 
-        self.save_to_csv('forfauna')
+        self.save_to_csv('finefaunart')
 
 
 hashtag_collector = hashtag_collector()

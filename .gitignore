@@ -132,3 +132,4 @@ dmypy.json
 example.txt
 notes.txt
 *.csv
+backup/
