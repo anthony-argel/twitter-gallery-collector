@@ -5,7 +5,7 @@ import csv
 
 load_dotenv()
 client = MongoClient(f'mongodb+srv://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@cluster0.narps.mongodb.net/gallerytw?retryWrites=true&w=majority')
-db = client['Cluster0']
+db = client['gallerytw']
 
 hashtag = 'finefaunart'
 
@@ -24,8 +24,17 @@ def upload_tweets():
 		reader = csv.reader(f)
 		next(reader)
 
+
 		for row in reader:
-			tweets.insert_one({'id':row[0], 'text':row[1], 'media_keys':row[2]})
+			media_keys = []
+			keys = row[2].split("\'")
+			for key in keys:
+				if(key == '[' or key == ']'):
+					continue
+				else:
+					media_keys.append(key)
+
+			tweets.insert_one({'id':row[0], 'text':row[1], 'media_keys':media_keys})
 
 def upload_meta():
 	meta = db.metas
@@ -41,4 +50,4 @@ def upload_all():
 	upload_tweets()
 	upload_meta()
 
-upload_all()
+upload_tweets()
