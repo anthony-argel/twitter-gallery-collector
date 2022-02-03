@@ -48,5 +48,3 @@ def upload_all(hashtag):
 	upload_media(hashtag)
 	upload_tweets(hashtag)
 	upload_meta(hashtag)
-
-upload_all(hashtag = 'finefaunart')
