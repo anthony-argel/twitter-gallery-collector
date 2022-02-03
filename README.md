@@ -1,4 +1,4 @@
-# twitter-gallery-expander
+# twitter-gallery-collector
 This project uses the Twitter API to collect images from an inserted hashtag and save it to a CSV. Once the CSV is confirmed to be correct, you can then store the data in whatever database you want. (I personally used MongoDB)
 
 From main.py, insert the hashtag you want to collect data from into the hashtag variable. If any of the lines in main.py are commented out, that's a mistake. All of the lines should be uncommented.
