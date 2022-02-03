@@ -54,22 +54,22 @@ class hashtag_collector:
         print()
         print(l_media)
         print(len(l_media))
-    # while next token do that
-    # https://developer.twitter.com/en/docs/twitter-api/pagination
-    # &next_token=token to add
 
+    # reverse the lists at the end so that the older images get added first. This way we can use mongodb _id as a date object
     def save_to_csv(self, filename):
         check_directory('data')
         check_directory(f'data/{datetime.now().strftime("%d-%m-%Y")}')
         with open(f'data/{datetime.now().strftime("%d-%m-%Y")}/{filename}-tweets.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['id', 'text', 'media_keys'])
+            self.tweets.reverse()
             for tweet in self.tweets:
                 writer.writerow([str(tweet['id']), tweet['text'], tweet['attachments']['media_keys']])
 
         with open(f'data/{datetime.now().strftime("%d-%m-%Y")}/{filename}-media.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['media_key', 'url', 'type', 'hashtag'])
+            self.media.reverse()
             for content in self.media:
                 if('preview_image_url' in content):
                     writer.writerow([str(content['media_key']), content['preview_image_url'], content['type'], filename])
@@ -99,8 +99,8 @@ class hashtag_collector:
         
         url += query
         url += expansion
-        lastId = '1488679104530558976'
-        url += f'&since_id={lastId}'
+        #lastId = '1488679104530558976'
+        #url += f'&since_id={lastId}'
 
         data = self.get_data(url)
         self.parse_data(data)        
