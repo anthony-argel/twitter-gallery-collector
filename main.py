@@ -4,15 +4,21 @@ import html
 import requests
 import json
 import csv
+from datetime import datetime
 
 
 load_dotenv()
+
+def check_directory(directory):
+    if not os.path.exists(directory):
+            os.makedirs(directory)
 
 class hashtag_collector:
     def __init__(self):
         self.tweets = []
         self.meta = []
         self.media = []
+        self.newest_id = 0
 
     def get_data(self, url):
         headers = {'Authorization' : f'Bearer {os.getenv("TOKEN")}'}
@@ -33,7 +39,9 @@ class hashtag_collector:
         l_media = data['includes']['media']
         meta = data['meta']
 
-        self.meta = data['meta']
+        if(self.newest_id < int(meta['newest_id'])):
+            self.newest_id = int(meta['newest_id'])
+        self.meta = meta
         self.tweets.extend(data['data'])
         self.media.extend(data['includes']['media'])
 
@@ -51,13 +59,15 @@ class hashtag_collector:
     # &next_token=token to add
 
     def save_to_csv(self, filename):
-        with open(f'{filename}-tweets.csv', 'w', newline='', encoding= 'utf-8') as f:
+        check_directory('data')
+        check_directory(f'data/{datetime.now().strftime("%d-%m-%Y")}')
+        with open(f'data/{datetime.now().strftime("%d-%m-%Y")}/{filename}-tweets.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['id', 'text', 'media_keys'])
             for tweet in self.tweets:
                 writer.writerow([str(tweet['id']), tweet['text'], tweet['attachments']['media_keys']])
 
-        with open(f'{filename}-media.csv', 'w', newline='', encoding= 'utf-8') as f:
+        with open(f'data/{datetime.now().strftime("%d-%m-%Y")}/{filename}-media.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['media_key', 'url', 'type', 'hashtag'])
             for content in self.media:
@@ -66,7 +76,7 @@ class hashtag_collector:
                 else:
                     writer.writerow([str(content['media_key']), content['url'], content['type'], filename])
             
-        with open(f'{filename}-meta.csv', 'w', newline='', encoding= 'utf-8') as f:
+        with open(f'data/{datetime.now().strftime("%d-%m-%Y")}/{filename}-meta.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['newest_id', 'oldest_id'])
             writer.writerow([str(self.meta['newest_id']), str(self.meta['oldest_id'])])
@@ -86,8 +96,11 @@ class hashtag_collector:
         # https://developer.twitter.com/en/docs/twitter-api/data-dictionary/object-model/media
         # https://twittercommunity.com/t/how-to-get-media-url/141863/16
         expansion = '&expansions=attachments.media_keys&media.fields=preview_image_url,url,type'
+        
         url += query
         url += expansion
+        lastId = '1488679104530558976'
+        url += f'&since_id={lastId}'
 
         data = self.get_data(url)
         self.parse_data(data)        
