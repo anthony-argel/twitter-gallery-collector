@@ -68,13 +68,21 @@ class hashtag_collector:
 
         with open(f'data/{datetime.now().strftime("%d-%m-%Y")}/{filename}-media.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
-            writer.writerow(['media_key', 'url', 'type', 'hashtag'])
+            writer.writerow(['media_key', 'url', 'type', 'hashtag', 'tweet_text', 'id'])
             self.media.reverse()
             for content in self.media:
+                temp_id = -1
+                temp_text = ''
+                for tweet in self.tweets:
+                    if(content['media_key'] in tweet['attachments']['media_keys']):
+                        temp_text = tweet['text']
+                        temp_id = str(tweet['id']) 
+
+
                 if('preview_image_url' in content):
-                    writer.writerow([str(content['media_key']), content['preview_image_url'], content['type'], filename])
+                    writer.writerow([str(content['media_key']), content['preview_image_url'], content['type'], filename, temp_text, temp_id])
                 else:
-                    writer.writerow([str(content['media_key']), content['url'], content['type'], filename])
+                    writer.writerow([str(content['media_key']), content['url'], content['type'], filename,temp_text, temp_id])
             
         with open(f'data/{datetime.now().strftime("%d-%m-%Y")}/{filename}-meta.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
@@ -84,20 +92,10 @@ class hashtag_collector:
 
     def start(self, hashtag, newest_id = -1):
         url = 'https://api.twitter.com/2/tweets/search/recent?query='
-        # querying
-        # https://developer.twitter.com/en/docs/twitter-api/tweets/search/integrate/build-a-query
-        # query = '#FineFaunart has:media'
-        # queries must be http encoded
-        # if you don't want to do it manually:
-        # https://www.urlencoder.io/python/
         query = f'#{hashtag} has:media -is:retweet'
-        # queries don't return media by default
-        # https://developer.twitter.com/en/docs/twitter-api/data-dictionary/object-model/media
-        # https://twittercommunity.com/t/how-to-get-media-url/141863/16
         expansion = '&expansions=attachments.media_keys&media.fields=preview_image_url,url,type&max_results=100'
 
         query = urllib.parse.quote(query)
-        print(query)
         query += expansion
         url += query
         if(newest_id != -1):

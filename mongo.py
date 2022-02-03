@@ -15,7 +15,7 @@ def upload_media(hashtag):
 		next(reader)
 
 		for row in reader:
-			media.insert_one({'media_key':row[0], 'url':row[1], 'type':row[2], 'hashtag':hashtag})
+			media.insert_one({'media_key':row[0], 'url':row[1], 'type':row[2], 'hashtag':hashtag, 'tweet':row[4], 'id':row[5]})
 		
 def upload_tweets(hashtag):
 	tweets = db.tweets
@@ -45,6 +45,7 @@ def upload_meta(hashtag):
 			meta.insert_one({'newestid':row[0], 'hashtag':hashtag})
 
 def upload_all(hashtag):
+	print('sending to the database...')
 	upload_media(hashtag)
 	upload_tweets(hashtag)
 	upload_meta(hashtag)
