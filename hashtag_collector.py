@@ -20,6 +20,7 @@ class hashtag_collector:
         self.meta = []
         self.media = []
         self.newest_id = 0
+        self.oldest_id = -1
 
     def get_data(self, url):
         headers = {'Authorization' : f'Bearer {os.getenv("TOKEN")}'}
@@ -36,12 +37,21 @@ class hashtag_collector:
         l_tweet = []
         l_media = []
         data = response
+        if (isinstance(data, dict) == False):
+            print('a dictionary wasnt returned')
+            print(type(data))
+            print(data)
+            return -1
+        if (data['meta']['result_count'] == 0):
+            return -1
         l_tweet = data['data']
         l_media = data['includes']['media']
         meta = data['meta']
 
         if(self.newest_id < int(meta['newest_id'])):
             self.newest_id = int(meta['newest_id'])
+        if(self.oldest_id == -1 or self.oldest_id > int(meta['oldest_id'])):
+            self.oldest_id = int(meta['oldest_id'])
         self.meta = meta
         self.tweets.extend(data['data'])
         self.media.extend(data['includes']['media'])
@@ -58,15 +68,15 @@ class hashtag_collector:
 
     def save_to_csv(self, filename):
         check_directory('data')
-        check_directory(f'data/{datetime.now().strftime("%d-%m-%Y")}')
-        with open(f'data/{datetime.now().strftime("%d-%m-%Y")}/{filename}-tweets.csv', 'w', newline='', encoding= 'utf-8') as f:
+        check_directory(f'data/{datetime.now().strftime("%Y-%m-%d")}')
+        with open(f'data/{datetime.now().strftime("%Y-%m-%d")}/{filename}-tweets.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['id', 'text', 'media_keys'])
             self.tweets.reverse()
             for tweet in self.tweets:
                 writer.writerow([str(tweet['id']), tweet['text'], tweet['attachments']['media_keys']])
 
-        with open(f'data/{datetime.now().strftime("%d-%m-%Y")}/{filename}-media.csv', 'w', newline='', encoding= 'utf-8') as f:
+        with open(f'data/{datetime.now().strftime("%Y-%m-%d")}/{filename}-media.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['media_key', 'url', 'type', 'hashtag', 'tweet_text', 'id'])
             self.media.reverse()
@@ -84,13 +94,18 @@ class hashtag_collector:
                 else:
                     writer.writerow([str(content['media_key']), content['url'], content['type'], filename,temp_text, temp_id])
             
-        with open(f'data/{datetime.now().strftime("%d-%m-%Y")}/{filename}-meta.csv', 'w', newline='', encoding= 'utf-8') as f:
+        with open(f'data/{datetime.now().strftime("%Y-%m-%d")}/{filename}-meta.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['newest_id', 'oldest_id'])
-            writer.writerow([str(self.meta['newest_id']), str(self.meta['oldest_id'])])
+            writer.writerow([self.newest_id, self.oldest_id])
 
 
     def start(self, hashtag, newest_id = -1):
+        self.tweets = []
+        self.meta = []
+        self.media = []
+        self.newest_id = 0
+        self.oldest_id = -1
         url = 'https://api.twitter.com/2/tweets/search/recent?query='
         query = f'#{hashtag} has:media -is:retweet'
         expansion = '&expansions=attachments.media_keys&media.fields=preview_image_url,url,type&max_results=100'
@@ -99,10 +114,13 @@ class hashtag_collector:
         query += expansion
         url += query
         if(newest_id != -1):
+            print('updating from ' + newest_id)
             url += f'&since_id={newest_id}'
 
         data = self.get_data(url)
-        self.parse_data(data)        
+        if(self.parse_data(data) == -1):
+            print('no new images found')
+            return -1
 
         while('next_token' in self.meta.keys()):
             headers = {'Authorization' : f'Bearer {os.getenv("TOKEN")}'}
