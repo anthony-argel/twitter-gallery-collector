@@ -56,16 +56,6 @@ class hashtag_collector:
         self.tweets.extend(data['data'])
         self.media.extend(data['includes']['media'])
 
-        print()
-        print(meta)
-        print()
-        print(l_tweet)
-        print(len(l_tweet))
-        print(len(self.tweets))
-        print()
-        print(l_media)
-        print(len(l_media))
-
     def save_to_csv(self, filename):
         check_directory('data')
         check_directory(f'data/{datetime.now().strftime("%Y-%m-%d")}')
@@ -74,7 +64,12 @@ class hashtag_collector:
             writer.writerow(['id', 'text', 'media_keys'])
             self.tweets.reverse()
             for tweet in self.tweets:
-                writer.writerow([str(tweet['id']), tweet['text'], tweet['attachments']['media_keys']])
+                if('attachments' in tweet.keys()):
+                    writer.writerow([str(tweet['id']), tweet['text'], tweet['attachments']['media_keys']])
+                else:
+                    print('we couldnt find the attachments for data:')
+                    print(tweet)
+                    print()
 
         with open(f'data/{datetime.now().strftime("%Y-%m-%d")}/{filename}-media.csv', 'w', newline='', encoding= 'utf-8') as f:
             writer = csv.writer(f)
@@ -84,9 +79,10 @@ class hashtag_collector:
                 temp_id = -1
                 temp_text = ''
                 for tweet in self.tweets:
-                    if(content['media_key'] in tweet['attachments']['media_keys']):
-                        temp_text = tweet['text']
-                        temp_id = str(tweet['id']) 
+                    if('attachments' in tweet.keys()):
+                        if(content['media_key'] in tweet['attachments']['media_keys']):
+                            temp_text = tweet['text']
+                            temp_id = str(tweet['id']) 
 
 
                 if('preview_image_url' in content):
